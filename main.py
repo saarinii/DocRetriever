@@ -7,6 +7,8 @@ from io import BytesIO
 from typing import List
 from docx import Document
 import PyPDF2
+from fastapi.responses import JSONResponse
+import logging
 
 # Initialize FastAPI
 app = FastAPI()
@@ -25,6 +27,17 @@ def extract_text_from_pdf(file: BytesIO) -> str:
     for page in reader.pages:
         text += page.extract_text()
     return text
+
+
+@app.post("/upload/")
+async def upload_file(file: UploadFile = File(...)):
+    try:
+        content = await file.read()
+        # Process file content here if needed
+        return JSONResponse(content={"filename": file.filename, "content": content.decode("utf-8")})
+    except Exception as e:
+        logging.error(f"Error processing file: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 # Helper function to extract text from DOCX
 def extract_text_from_docx(file: BytesIO) -> str:
